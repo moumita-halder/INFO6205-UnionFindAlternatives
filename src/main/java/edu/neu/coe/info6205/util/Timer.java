@@ -5,6 +5,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+import javax.swing.plaf.metal.MetalLookAndFeel;
+
 public class Timer {
 
     /**
@@ -15,7 +17,8 @@ public class Timer {
     }
 
     /**
-     * Run the given function n times, once per "lap" and then return the result of calling stop().
+     * Run the given function n times,
+     * once per "lap" and then return the result of calling stop().
      *
      * @param n        the number of repetitions.
      * @param function a function which yields a T (T may be Void).
@@ -43,19 +46,54 @@ public class Timer {
     }
 
     /**
-     * Pause (without counting a lap); run the given functions n times while being timed, i.e. once per "lap", and finally return the result of calling meanLapTime().
+     * Pause (without counting a lap); run the given functions n times while being timed,
+     * i.e. once per "lap", and finally return the result of calling meanLapTime().
      *
      * @param n            the number of repetitions.
      * @param supplier     a function which supplies a T value.
      * @param function     a function T=>U and which is to be timed.
-     * @param preFunction  a function which pre-processes a T value and which precedes the call of function, but which is not timed (may be null).
+     * @param preFunction  a function which pre-processes a T value and
+     * which precedes the call of function, but which is not timed (may be null).
      * @param postFunction a function which consumes a U and which succeeds the call of function, but which is not timed (may be null).
      * @return the average milliseconds per repetition.
      */
-    public <T, U> double repeat(int n, Supplier<T> supplier, Function<T, U> function, UnaryOperator<T> preFunction, Consumer<U> postFunction) {
+    public <T, U> double repeat(int n, Supplier<T> supplier,
+                                Function<T, U> function,
+                                UnaryOperator<T> preFunction,
+                                Consumer<U> postFunction) {
         logger.trace("repeat: with " + n + " runs");
-        // TO BE IMPLEMENTED: note that the timer is running when this method is called and should still be running when it returns.
-        throw new UnsupportedOperationException();
+        // TO BE IMPLEMENTED: note that the timer is running when this method is called
+        // and should still be running when it returns.
+
+        for (int i = 0; i < n; i++) {
+            if(running)
+                pause();
+
+            if(function == null) {
+                String errorMessage =
+                        "Error: The study function can't be null!";
+                logger.error(errorMessage);
+                throw new TimerException(errorMessage);
+
+            } else {
+                if(running)
+                    pause();
+
+                T preFunctionResult = preFunction != null
+                        ? preFunction.apply(supplier.get())
+                        : supplier.get();
+
+                resume();
+                U fuctionResult = function.apply(preFunctionResult);
+                lap();
+                pause();
+
+                if(postFunction != null)
+                    postFunction.accept(fuctionResult);
+            }
+        }
+
+        return meanLapTime();
     }
 
     /**
@@ -173,8 +211,7 @@ public class Timer {
      * @return the number of ticks for the system clock. Currently defined as nano time.
      */
     private static long getClock() {
-        // TO BE IMPLEMENTED
-        throw new UnsupportedOperationException();
+        return System.nanoTime();
     }
 
     /**
@@ -185,8 +222,7 @@ public class Timer {
      * @return the corresponding number of milliseconds.
      */
     private static double toMillisecs(long ticks) {
-        // TO BE IMPLEMENTED
-        throw new UnsupportedOperationException();
+        return ticks/1000000;
     }
 
     final static LazyLogger logger = new LazyLogger(Timer.class);

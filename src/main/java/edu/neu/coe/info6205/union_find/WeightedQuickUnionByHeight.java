@@ -12,7 +12,7 @@ import java.util.Arrays;
 /**
  * Height-weighted Quick Union with Path Compression
  */
-public class UF_HWQUPC implements UF {
+public class WeightedQuickUnionByHeight implements UF {
     /**
      * Ensure that site p is connected to site q,
      *
@@ -32,13 +32,13 @@ public class UF_HWQUPC implements UF {
      * @param pathCompression whether to use path compression
      * @throws IllegalArgumentException if {@code n < 0}
      */
-    public UF_HWQUPC(int n, boolean pathCompression) {
+    public WeightedQuickUnionByHeight(int n, boolean pathCompression) {
         count = n;
         parent = new int[n];
         height = new int[n];
         for (int i = 0; i < n; i++) {
             parent[i] = i;
-            height[i] = 1;
+            height[i] = 0;
         }
         this.pathCompression = pathCompression;
     }
@@ -52,7 +52,7 @@ public class UF_HWQUPC implements UF {
      * @param n the number of sites
      * @throws IllegalArgumentException if {@code n < 0}
      */
-    public UF_HWQUPC(int n) {
+    public WeightedQuickUnionByHeight(int n) {
         this(n, true);
     }
 
@@ -85,9 +85,8 @@ public class UF_HWQUPC implements UF {
         if(pathCompression)
             doPathCompression(p);
 
-        while (root != parent[root]) {
+        while (root != parent[root])
             root = parent[root];
-        }
 
         return root;
     }
@@ -137,7 +136,7 @@ public class UF_HWQUPC implements UF {
 
     @Override
     public String toString() {
-        return "UF_HWQUPC:" + "\n  count: " + count +
+        return "WeightedQuickUnionByHeight:" + "\n  count: " + count +
                 "\n  path compression? " + pathCompression +
                 "\n  parents: " + Arrays.toString(parent) +
                 "\n  heights: " + Arrays.toString(height);
@@ -175,20 +174,17 @@ public class UF_HWQUPC implements UF {
     private boolean pathCompression;
 
     private void mergeComponents(int i, int j) {
-        // if both are same, then return, else make shorter root point to the taller one.
-        if(i != j){
-            // If the size of i is less that the size of j,
-            // add the smaller i's height to the larger height of j.
-            // Update the parent of i or the smaller node's parent as j.
-            if(height[i] < height[j]){
-                height[j] += height[i];
+        if (i != j){
+            // Make shorter root point to taller one
+            if (height[i] < height[j])
                 parent[i] = j;
-            } else {
-                // else if the height of i are same or greater than j,
-                // add the smaller j's height to the larger or equal height of i.
-                // Update the parent of j or the smaller node's parent as i.
-                height[i] += height[j];
+
+            else if (height[i] > height[j])
                 parent[j] = i;
+
+            else {
+                parent[j] = i;
+                height[i]++;
             }
         }
     }

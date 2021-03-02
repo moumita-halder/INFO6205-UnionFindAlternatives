@@ -4,10 +4,20 @@
 
 package edu.neu.coe.info6205.util;
 
+import edu.neu.coe.info6205.union_find.UF;
+import edu.neu.coe.info6205.union_find.UF_HWQUPC;
+import edu.neu.coe.info6205.union_find.WQUPC;
+import edu.neu.coe.info6205.union_find.WeightedQuickUnionByHeight;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import static edu.neu.coe.info6205.util.Utilities.formatWhole;
 
@@ -125,4 +135,121 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
     private final Consumer<T> fPost;
 
     final static LazyLogger logger = new LazyLogger(Benchmark_Timer.class);
+
+    public static void main(String[] args) {
+        final int[] numberOfPairs = new int[1];
+        AtomicInteger total = new AtomicInteger();
+        int numberOfSites = 100;
+
+        List<Double> listOfMeanRunTimes = new ArrayList<>();
+        List<Double> listOfMeanRunTimes1 = new ArrayList<>();
+        List<Double> listOfMeanRunTimes2 = new ArrayList<>();
+        List<Integer> listOfNumberSites = new ArrayList<>();
+
+        // At each iteration double the number of sites.
+        for (int i = 1; i <= 11; i++) {
+            numberOfPairs[0] = 0;
+            total.set(0);
+            int finalNumberOfSites = numberOfSites;
+            Benchmark<Integer> benchMark = new Benchmark_Timer<>
+                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Weighted quick union with path compression: ",
+                        t -> finalNumberOfSites,
+                        t -> numberOfPairs[0] = count(t, new UF_HWQUPC(t)),
+                        t-> total.addAndGet(numberOfPairs[0])
+                    );
+
+            double meanRunTime = benchMark.run(numberOfSites, 10);
+
+            listOfMeanRunTimes.add(meanRunTime);
+            System.out.println("Run: "+ i + ": " + meanRunTime + " milli-seconds");
+            System.out.println("Mean total pairs generated: " + total.get() / 10);
+
+            numberOfPairs[0] = 0;
+            total.set(0);
+            benchMark = new Benchmark_Timer<>
+                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Height-Weighted quick union: ",
+                            t -> finalNumberOfSites,
+                            t -> numberOfPairs[0] = count(t, new WeightedQuickUnionByHeight(t, false)),
+                            t-> total.addAndGet(numberOfPairs[0])
+                    );
+
+            meanRunTime = benchMark.run(numberOfSites, 10);
+            listOfMeanRunTimes1.add(meanRunTime);
+            System.out.println("Run: "+ i + ": " + meanRunTime + " milli-seconds");
+            System.out.println("Mean total pairs generated: " + total.get() / 10);
+            System.out.println("----------------------------------------------------");
+
+            numberOfPairs[0] = 0;
+            total.set(0);
+            benchMark = new Benchmark_Timer<>
+                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Height-Weighted quick union: ",
+                            t -> finalNumberOfSites,
+                            t -> numberOfPairs[0] = count(t, new WQUPC(t)),
+                            t-> total.addAndGet(numberOfPairs[0])
+                    );
+
+            meanRunTime = benchMark.run(numberOfSites, 10);
+            listOfMeanRunTimes2.add(meanRunTime);
+            System.out.println("Run: "+ i + ": " + meanRunTime + " milli-seconds");
+            System.out.println("Mean total pairs generated: " + total.get() / 10);
+            System.out.println("----------------------------------------------------");
+
+            listOfNumberSites.add(numberOfSites);
+
+            // double the number of sites for the next iteration.
+            numberOfSites *= 2;
+        }
+
+        System.out.println("----------------------------------------------------");
+        System.out.println("Printing all X axis values (number of sites doubled each iteration): \n" +
+                listOfNumberSites.stream().map(String::valueOf)
+                        .collect(Collectors.joining(",")));
+        System.out.println("----------------------------------------------------");
+        System.out.println("Printing all Y axis values (mean run times for Weighted quick union with path compression): \n" +
+                listOfMeanRunTimes.stream().map(String::valueOf)
+                        .collect(Collectors.joining("\n")));
+        System.out.println("----------------------------------------------------");
+        System.out.println("Printing all Y axis values (mean run times for Height-Weighted quick union): \n" +
+                listOfMeanRunTimes1.stream().map(String::valueOf)
+                        .collect(Collectors.joining("\n")));
+        System.out.println("----------------------------------------------------");
+        System.out.println("Printing all Y axis values (mean run times for Weighted quick union): \n" +
+                listOfMeanRunTimes2.stream().map(String::valueOf)
+                        .collect(Collectors.joining("\n")));
+        System.out.println("----------------------------------------------------");
+    }
+
+    private static int count(int numberOfSites, UF weightedUnionFind) {
+        int connectionsCount = 0;
+        int numberOfPairs = 0;
+
+        Random random = new Random(numberOfSites);
+
+        // Loop until all sites are connected then print the number of connections generated.
+        // After all are connected, the weightedUnionFind.components() would have the value of 1.
+        while (weightedUnionFind.components() != 1) {
+            // Then generate random pairs of integers between 0 and n-1,
+            int numberOne = random.nextInt(numberOfSites);
+            int numberTwo = random.nextInt(numberOfSites);
+            ++numberOfPairs;
+
+            while(numberOne == numberTwo){
+                numberTwo = random.nextInt(numberOfSites);
+                ++numberOfPairs;
+            }
+
+            // Calling connected() to determine if they are connected and union() if not.
+            if(! weightedUnionFind
+                    .isConnected(numberOne, numberTwo)){
+                ++connectionsCount;
+
+                //System.out.println("Union(" + numberOne + ","+numberTwo + ")");
+                //weightedUnionFind.show();
+                weightedUnionFind.union(numberOne, numberTwo);
+
+                //System.out.println("After union count: " + weightedUnionFind.components());
+            }
+        }
+        return numberOfPairs;
+    }
 }

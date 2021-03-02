@@ -6,7 +6,7 @@ package edu.neu.coe.info6205.union_find;
 /**
  * Weighted Quick Union with Path Compression
  */
-public class WQUPC {
+public class WQUPC implements UF {
     private final int[] parent;   // parent[i] = parent of i
     private final int[] size;   // size[i] = size of subtree rooted at i
     private int count;  // number of components
@@ -41,6 +41,11 @@ public class WQUPC {
      * @return the number of components (between {@code 1} and {@code n})
      */
     public int count() {
+        return count;
+    }
+
+    @Override
+    public int components() {
         return count;
     }
 
@@ -111,4 +116,12 @@ public class WQUPC {
         count--;
     }
 
+    @Override
+    public int size() {
+        return parent.length;
+    }
+
+    public void connect(int p, int q) {
+        if (!isConnected(p, q)) union(p, q);
+    }
 }
