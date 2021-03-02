@@ -167,7 +167,7 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
             numberOfPairs[0] = 0;
             total.set(0);
             benchMark = new Benchmark_Timer<>
-                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Height-Weighted quick union: ",
+                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Weighted quick union by height without path compression: ",
                             t -> finalNumberOfSites,
                             t -> numberOfPairs[0] = count(t, new WeightedQuickUnionByHeight(t, false)),
                             t-> total.addAndGet(numberOfPairs[0])
@@ -182,7 +182,7 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
             numberOfPairs[0] = 0;
             total.set(0);
             benchMark = new Benchmark_Timer<>
-                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Height-Weighted quick union: ",
+                    ("Sites: " + finalNumberOfSites + " | Run: "+ i + " | Weighted quick union: ",
                             t -> finalNumberOfSites,
                             t -> numberOfPairs[0] = count(t, new WQUPC(t)),
                             t-> total.addAndGet(numberOfPairs[0])
@@ -209,7 +209,7 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
                 listOfMeanRunTimes.stream().map(String::valueOf)
                         .collect(Collectors.joining("\n")));
         System.out.println("----------------------------------------------------");
-        System.out.println("Printing all Y axis values (mean run times for Height-Weighted quick union): \n" +
+        System.out.println("Printing all Y axis values (mean run times for Weighted quick union by height without path compression): \n" +
                 listOfMeanRunTimes1.stream().map(String::valueOf)
                         .collect(Collectors.joining("\n")));
         System.out.println("----------------------------------------------------");
